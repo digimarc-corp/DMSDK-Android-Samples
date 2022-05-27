@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >    
+
+    <PreferenceCategory 
+        android:title="Reader Toggles">
+  		<CheckBoxPreference
+			android:key="ImageBarcode"
+			android:defaultValue="true"
+     		android:summary="Read image barcodes"
+     		android:title="Image Barcode" />
+  		<CheckBoxPreference
+			android:key="AudioDigimarc"
+			android:defaultValue="true"
+     		android:summary="Read audio Digimarcs"
+     		android:title="Audio Digimarc" />
+	</PreferenceCategory>
+
+    <PreferenceCategory android:title="About" android:key="About" />
+
+</PreferenceScreen>

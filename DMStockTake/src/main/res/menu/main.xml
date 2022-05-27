@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Region"
+        android:id="@+id/menu_region"
+        android:icon="@drawable/ic_brackets"
+        app:showAsAction="always"/>
+    <item android:title="Torch"
+        android:id="@+id/menu_torch"
+        android:icon="@drawable/ic_flash_off_light_24px"
+        app:showAsAction="always"/>
+    <item android:title="Settings"
+        android:id="@+id/menu_settings"/>
+</menu>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Digimarc DMSDemo</string>
+    <string name="prompt_title">Permission Requested</string>
+    <string name="prompt_camera">This application requires access to the camera in order to read Image Digimarcs and barcodes.</string>
+    <string name="prompt_audio">This application requires access to the microphone in order to decode Audio Digimarcs.</string>
+    <string name ="menu_about">About</string>
+    <string name="snackbar_action">Launch</string>
+
+    <string name="license_key">AYwJwsSyKiXXrewmxcvZEUBsij6LUF88O+3Ty5tGJhVbFZaE/uwdw1+RwzUOVlzrqpFk5OmEsfKNwYJDyAHH6bam9EyxZvSUZ0r6vDXBnY0Bafc0zpO/vWv5wZQQKCUa92N3JCsvDJQwPLpru6htDoLm2KV75vRIk+V/Rg0b5iV5HBDUZS1BBPc0J0aYSbjNo33rOQoWSv21QIOw6sNKlnjvrDLxPQ==</string>
+</resources>

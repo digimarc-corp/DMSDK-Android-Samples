@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="barcodeDistance">
+            <item name="Near">Near</item>
+            <item name="Far">Far</item>
+            <item name="FullRange">Full Range</item>
+    </string-array>
+
+    <string-array name="distanceValues">
+            <item name="Near">"0"</item>
+            <item name="Far">"1"</item>
+            <item name="FullRange">"2"</item>
+    </string-array>
+
+</resources>
