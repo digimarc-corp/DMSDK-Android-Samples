@@ -22,8 +22,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
 import com.digimarc.capture.camera.CameraRegionListener;
-import com.digimarc.dms.internal.ReaderOptionsInternal;
-import com.digimarc.dms.readers.ReaderOptions;
 import com.digimarc.dms.readers.image.DetectionRegion;
 import com.digimarc.dms.readers.image.PreviewDetectionRegion;
 import com.google.android.material.snackbar.Snackbar;
@@ -158,9 +156,13 @@ public class MainActivity
         {
             showSpinner( false );
 
+            // A payload may have more than one web experience associated with it in Digimarc's Resolver.
+            ContentItem content = result.getContentItems().get( 0 );
+
+            // If the content was resolved from an audio payload, we don't want to interrupt the camera
+            // stream. Show a preview of the content in a Snackbar instead.
             boolean shouldLaunch = ( result.getPayload().getSymbology() !=
                     BaseReader.AudioSymbology.Audio_Digimarc );
-            ContentItem content = getHighestPriorityContentItem( result );
 
             if ( content != null )
             {
@@ -740,31 +742,6 @@ public class MainActivity
     private void showSpinner( boolean show )
     {
         mSpinner.setVisibility( show ? View.VISIBLE : View.INVISIBLE );
-    }
-
-    /**
-     * If a resolve result contains multiple content items we always want to launch
-     * the most important of those. At this point we only looking at whether the item
-     * is for a SmartLabel link or not, but in the future this could be expanded to
-     * support more levels.
-     * @param resolvedContent    The ResolvedContent received from the Digimarc Resolver.
-     * @return The most important content item within the resolve data. This will be the SmartLabel
-     * content link if the data contains one, otherwise it will be the first content item found.
-     */
-    private ContentItem getHighestPriorityContentItem( @NonNull ResolvedContent resolvedContent )
-    {
-        ContentItem content = resolvedContent.getContentItems().get( 0 );
-
-        for ( ContentItem next : resolvedContent.getContentItems() )
-        {
-            if ( next.getCategory() == ContentItem.Category.SmartLabel )
-            {
-                content = next;
-                break;
-            }
-        }
-
-        return content;
     }
 
     /**

@@ -22,7 +22,7 @@ public class PermissionActivity
 
     private int mCurrentIndex = 0;
 
-    private class PermissionPrompt
+    private static class PermissionPrompt
     {
         final String mPermission;
         final int mPromptRes;
@@ -34,7 +34,7 @@ public class PermissionActivity
         }
     }
 
-    private final PermissionPrompt mRequiredPermissions[] = {
+    private final PermissionPrompt[] mRequiredPermissions = {
             new PermissionPrompt( "android.permission.CAMERA", R.string.prompt_camera ),
             new PermissionPrompt( "android.permission.RECORD_AUDIO", R.string.prompt_audio ) };
 
@@ -62,7 +62,7 @@ public class PermissionActivity
         while ( mCurrentIndex < mRequiredPermissions.length && !permissionLaunched )
         {
             PermissionPrompt next = mRequiredPermissions[ mCurrentIndex ];
-            final String permission[] = { next.mPermission };
+            final String[] permission = { next.mPermission };
 
             if ( ContextCompat.checkSelfPermission( this, next.mPermission ) != PackageManager.PERMISSION_GRANTED )
             {
@@ -112,7 +112,7 @@ public class PermissionActivity
      * @param permissions   List of permissions.
      * @param grantResults  List of results.
      */
-    public void onRequestPermissionsResult( int requestCode, @NonNull  String permissions[], @NonNull int[] grantResults)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
         processNextPermission();
     }

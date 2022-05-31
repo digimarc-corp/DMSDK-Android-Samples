@@ -3,5 +3,5 @@
   <string name="flash_on">Flash on</string>
   <string name="flash_off">Flash off</string>
   <string name="menu_clear">Clear history</string>
-  <string name="license_key">AYwJwsSyKiXXrewmxcvZEUBsij6LUF88O+3Ty5tGJhVbFZaE/uwdw1+RwzUOVlzrqpFk5OmEsfKNwYJDyAHH6bam9EyxZvSUZ0r6vDXBnY0Bafc0zpO/vWv5wZQQKCUa92N3JCsvDJQwPLpru6htDoLm2KV75vRIk+V/Rg0b5iV5HBDUZS1BBPc0J0aYSbjNo33rOQoWSv21QIOw6sNKlnjvrDLxPQ==</string>
+  <string name="license_key">LICENSE_KEY_GOES_HERE</string>
 </resources>

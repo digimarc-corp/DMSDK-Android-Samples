@@ -24,8 +24,8 @@ import java.net.URL
 
 const val MAX_ITEMS = 15 // Cap entries so that we don't saturate device memory with bitmaps
 
-class DISAdapter(val scope: CoroutineScope, private val clickListener: DISItemClickListener) :
-        RecyclerView.Adapter<DISAdapter.ViewHolder>() {
+class DetectorViewItemAdapter(val scope: CoroutineScope, private val clickListener: DetectorViewItemClickListener) :
+        RecyclerView.Adapter<DetectorViewItemAdapter.ViewHolder>() {
     companion object {
         private val thumbnailCache = mutableMapOf<String, Bitmap>()
         private val options: BitmapFactory.Options = BitmapFactory.Options().apply {
@@ -34,9 +34,9 @@ class DISAdapter(val scope: CoroutineScope, private val clickListener: DISItemCl
         }
     }
 
-    var items = mutableListOf<DISItem>()
+    var items = mutableListOf<DetectorViewItem>()
 
-    fun add(item: DISItem) {
+    fun add(item: DetectorViewItem) {
         scope.launch {
             updateData(item)
             notifyDataSetChanged()
@@ -48,7 +48,7 @@ class DISAdapter(val scope: CoroutineScope, private val clickListener: DISItemCl
         notifyDataSetChanged()
     }
 
-    private suspend fun updateData(item: DISItem) =
+    private suspend fun updateData(item: DetectorViewItem) =
             withContext(Dispatchers.Default) {
                 // Remove entries with the same payload
                 items.remove(item)
@@ -146,18 +146,18 @@ class DISAdapter(val scope: CoroutineScope, private val clickListener: DISItemCl
     override fun getItemCount() = items.size
 }
 
-class DISItemClickListener(val clickListener: (url: String) -> Unit) {
+class DetectorViewItemClickListener(val clickListener: (url: String) -> Unit) {
     fun onClick(contentItem: ContentItem) = clickListener(contentItem.content)
 }
 
 @Parcelize
 @TypeParceler<ResolvedContent, ResolvedContentParceler>()
-data class DISItem(val content: ResolvedContent, val img: Bitmap?) : Parcelable {
+data class DetectorViewItem(val content: ResolvedContent, val img: Bitmap?) : Parcelable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as DISItem
+        other as DetectorViewItem
 
         return content.payload.payloadString == other.content.payload.payloadString
     }

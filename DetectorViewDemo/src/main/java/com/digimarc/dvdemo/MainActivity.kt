@@ -7,7 +7,7 @@ class MainActivity : AppCompatActivity(), PermissionFragment.OnPermissionGranted
     override fun onPermissionGranted() {
         supportFragmentManager
                 .beginTransaction()
-                .replace(R.id.frame, CameraFragment())
+                .replace(R.id.frame, DetectorViewFragment())
                 .commit()
     }
 

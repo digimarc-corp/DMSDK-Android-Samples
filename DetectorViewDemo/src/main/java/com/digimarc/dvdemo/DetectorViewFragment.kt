@@ -2,15 +2,14 @@ package com.digimarc.dvdemo
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.AssetFileDescriptor
+import android.graphics.Color
 import android.graphics.RectF
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.view.*
 import androidx.core.content.ContextCompat
@@ -28,7 +27,7 @@ import com.digimarc.dms.resolver.ResolvedContent
 import kotlinx.coroutines.*
 import java.util.*
 
-class CameraFragment : Fragment() {
+class DetectorViewFragment : Fragment() {
     companion object {
         private const val useRenderScript = true  // Toggle RenderScript usage for converting image data to bitmaps
         private const val BUNDLE_ITEMS = "ITEMS"
@@ -41,7 +40,7 @@ class CameraFragment : Fragment() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var dmsDetectorView: DMSDetectorView? = null
-    private var disAdapter: DISAdapter? = null
+    private var detectorViewItemAdapter: DetectorViewItemAdapter? = null
     private var yuvToBitmap: YuvToBitmap? = null
     private val frameStorage = ImageFrameStorage()
     private var torchMenuItem: MenuItem? = null
@@ -89,10 +88,10 @@ class CameraFragment : Fragment() {
             rawFileDescriptor.close()
         }
 
-        disAdapter = DISAdapter(scope, DISItemClickListener { url ->
+        detectorViewItemAdapter = DetectorViewItemAdapter(scope, DetectorViewItemClickListener { url ->
             launchContent(url)
         })
-        recyclerView.adapter = disAdapter
+        recyclerView.adapter = detectorViewItemAdapter
         val decorator = DividerItemDecoration(recyclerView.context, RecyclerView.VERTICAL)
         recyclerView.addItemDecoration(decorator)
 
@@ -114,14 +113,14 @@ class CameraFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_clear_history -> disAdapter?.clear()
+            R.id.menu_clear_history -> detectorViewItemAdapter?.clear()
             R.id.menu_flash -> isTorchOn = !isTorchOn
         }
         return false
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelableArrayList(BUNDLE_ITEMS, disAdapter?.items as ArrayList<DISItem>)
+        outState.putParcelableArrayList(BUNDLE_ITEMS, detectorViewItemAdapter?.items as ArrayList<DetectorViewItem>)
 
         super.onSaveInstanceState(outState)
     }
@@ -130,9 +129,9 @@ class CameraFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         savedInstanceState?.let { bundle ->
-            val restoredItems = bundle.getParcelableArrayList<DISItem>(BUNDLE_ITEMS) as MutableList<DISItem>
+            val restoredItems = bundle.getParcelableArrayList<DetectorViewItem>(BUNDLE_ITEMS) as MutableList<DetectorViewItem>
 
-            disAdapter?.apply {
+            detectorViewItemAdapter?.apply {
                 items = restoredItems
                 notifyDataSetChanged()
             }
@@ -205,8 +204,8 @@ class CameraFragment : Fragment() {
                     override fun onResolved(result: ResolvedContent) {
                         scope.launch {
                             val item = createEntry(result)
-                            disAdapter?.add(item)
-                            recyclerView.scrollToPosition(disAdapter?.itemCount!!)
+                            detectorViewItemAdapter?.add(item)
+                            recyclerView.scrollToPosition(detectorViewItemAdapter?.itemCount!!)
                         }
                     }
 
@@ -226,6 +225,18 @@ class CameraFragment : Fragment() {
             dmsDetectorView?.setNotifyListener {
                 activity?.invalidateOptionsMenu()
             }
+
+            // Turn on display of code locations.
+            dmsDetectorView?.setShowImageDetectionLocation(true)
+
+            // Configure code location display. The display colors and style can be changed
+            // using the parameters below.
+            dmsDetectorView?.setImageDetectionLocationStyle(
+                    DMSDetectorView.ImageDetectionLocationStyle.Builder()
+                            .setBorderColor(Color.RED)
+                            .setBorderWidth(1f)
+                            .setFillColor(0x70FFFFFF)
+                            .build())
 
             // Uncomment to constrain detection to a specific region of the camera frame.
 //            enableImageDetectionRegion()
@@ -265,7 +276,7 @@ class CameraFragment : Fragment() {
             )
         }
 
-        DISItem(result, scaledBmp)
+        DetectorViewItem(result, scaledBmp)
     }
 
     private fun showErrorDialog(msg: String) {
@@ -296,78 +307,3 @@ class CameraFragment : Fragment() {
     }
 }
 
-/**
- * Headless fragment for permission prompting.
- */
-class PermissionFragment : Fragment() {
-    companion object {
-        private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
-        private const val REQ_CODE = 1234
-    }
-
-    interface OnPermissionGrantedListener {
-        fun onPermissionGranted()
-    }
-
-    private var permissionListener: OnPermissionGrantedListener? = null
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        permissionListener = context as? OnPermissionGrantedListener
-        if (permissionListener == null) {
-            throw ClassCastException("$context must implement PermissionListener")
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (hasPermission()) {
-            permissionListener?.onPermissionGranted()
-        } else {
-            requestPermissions(PERMISSIONS, REQ_CODE)
-        }
-    }
-
-    private fun hasPermission(): Boolean {
-        for (permission in PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(requireActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
-                return false
-            }
-        }
-        return true
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        when (requestCode) {
-            REQ_CODE -> {
-                if (grantResults.isNotEmpty()) {
-                    // Don't continue without permissions
-                    if (grantResults.contains(PackageManager.PERMISSION_DENIED)) {
-                        activity?.let {
-                            val builder = AlertDialog.Builder(it)
-                            builder
-                                    .setTitle("Permission requested")
-                                    .setMessage("This application requires access to the camera in and microphone")
-                                    .setPositiveButton("Settings"
-                                    ) { _, _ ->
-                                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                        val uri = Uri.fromParts("package", activity?.packageName, null)
-                                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        intent.data = uri
-                                        activity?.startActivity(intent)
-                                        activity?.finish()
-                                    }
-                                    .setNegativeButton("Exit") { _, _ ->
-                                        activity?.finish()
-                                    }
-
-                            builder.create()?.show()
-                        }
-                    } else {
-                        permissionListener?.onPermissionGranted()
-                    }
-                }
-            }
-        }
-    }
-}

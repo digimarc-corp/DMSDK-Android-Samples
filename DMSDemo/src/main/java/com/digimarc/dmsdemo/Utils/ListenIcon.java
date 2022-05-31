@@ -69,11 +69,9 @@ public class ListenIcon
         mIcon = new ImageView( context, attrs );
         mIcon.setLayoutParams( mIconParams );
         mIcon.setImageResource( Icon_On );
-//        mIcon.setId( View.generateViewId() );
 
         mWaveView = new WaveView( context, attrs );
         mWaveView.setLayoutParams( circleParams );
-//        mCircle.setId( View.generateViewId());
 
         addView( mIcon );
         addView( mWaveView );
