@@ -6,6 +6,7 @@
     <string name="prompt_audio">This application requires access to the microphone in order to decode Audio Digimarcs.</string>
     <string name ="menu_about">About</string>
     <string name="snackbar_action">Launch</string>
+    <string name="preferences_version">SDK version: %s\nKB version: %s</string>
 
     <string name="license_key">LICENSE_KEY_GOES_HERE</string>
 </resources>
