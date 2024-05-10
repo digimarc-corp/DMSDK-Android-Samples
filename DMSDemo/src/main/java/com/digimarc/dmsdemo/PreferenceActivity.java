@@ -16,6 +16,8 @@ import android.util.Log;
 
 import com.digimarc.dms.readers.Manager;
 
+import java.util.Locale;
+
 public class PreferenceActivity
         extends android.preference.PreferenceActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener
@@ -48,8 +50,10 @@ public class PreferenceActivity
             Preference pref = new Preference( this );
 
             pref.setTitle( getString( R.string.app_name ) );
-            pref.setSummary(
-                    "SDK version: " + mgr.getSdkVersion() + ", KB version: " + mgr.getCameraSettingsKBVersion() );
+            pref.setSummary( String.format( Locale.US,
+                                            getString( R.string.preferences_version ),
+                                            mgr.getSdkVersion(),
+                                            mgr.getCameraSettingsKBVersion() ) );
             pref.setKey( "about" );
 
             category.addPreference( pref );

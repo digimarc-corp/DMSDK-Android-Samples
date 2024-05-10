@@ -11,7 +11,13 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -24,12 +30,14 @@ import com.digimarc.dms.readers.BaseReader
 import com.digimarc.dms.readers.ImageFrameStorage
 import com.digimarc.dms.readers.ReaderResult
 import com.digimarc.dms.resolver.ResolvedContent
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DetectorViewFragment : Fragment() {
     companion object {
-        private const val useRenderScript = true  // Toggle RenderScript usage for converting image data to bitmaps
         private const val BUNDLE_ITEMS = "ITEMS"
     }
 
@@ -41,7 +49,6 @@ class DetectorViewFragment : Fragment() {
     private var mediaPlayer: MediaPlayer? = null
     private var dmsDetectorView: DMSDetectorView? = null
     private var detectorViewItemAdapter: DetectorViewItemAdapter? = null
-    private var yuvToBitmap: YuvToBitmap? = null
     private val frameStorage = ImageFrameStorage()
     private var torchMenuItem: MenuItem? = null
     private var isTorchOn: Boolean = false
@@ -95,9 +102,6 @@ class DetectorViewFragment : Fragment() {
         val decorator = DividerItemDecoration(recyclerView.context, RecyclerView.VERTICAL)
         recyclerView.addItemDecoration(decorator)
 
-        activity?.let {
-            yuvToBitmap = YuvToBitmap(it)
-        }
 
         initDis()
     }
@@ -260,11 +264,7 @@ class DetectorViewFragment : Fragment() {
 
     suspend fun createEntry(result: ResolvedContent) = withContext(Dispatchers.Default) {
         val bmp = frameStorage.removeFrame(result.payload.payloadString)?.let { frame ->
-            if (useRenderScript) {
-                yuvToBitmap?.yuvFrameToBitmap(frame, bitmapRotation)
-            } else {
                 BitmapUtils.convertRawImageToBitmap(frame)
-            }
         }
 
         val scaledBmp = bmp?.let {
@@ -283,10 +283,10 @@ class DetectorViewFragment : Fragment() {
         activity?.let {
             val builder = AlertDialog.Builder(it)
             builder.setTitle("Error")
-                    .setMessage(msg)
-                    .setPositiveButton("OK") { dialog, _ ->
-                        dialog?.dismiss()
-                    }
+                .setMessage(msg)
+                .setPositiveButton("OK") { dialog, _ ->
+                    dialog?.dismiss()
+                }
             builder.create().apply {
                 if (!isShowing) {
                     show()
@@ -295,13 +295,17 @@ class DetectorViewFragment : Fragment() {
         }
     }
 
+    private fun showMessage(msg: String) {
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+    }
+
     private fun launchContent(url: String) {
         isTorchOn = false
 
         try {
             val i = Intent(Intent.ACTION_VIEW, Uri.parse(url).normalizeScheme())
             context?.startActivity(i)
-        } catch(ex: Exception) {
+        } catch (ex: Exception) {
             Log.i("DetectorViewDemo", "Unable to launch content")
         }
     }
