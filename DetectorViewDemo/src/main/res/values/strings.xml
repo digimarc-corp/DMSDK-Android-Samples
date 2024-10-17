@@ -1,7 +1,12 @@
 <resources>
-  <string name="app_name">DetectorViewDemo</string>
-  <string name="flash_on">Flash on</string>
-  <string name="flash_off">Flash off</string>
-  <string name="menu_clear">Clear history</string>
-  <string name="license_key">LICENSE_KEY_GOES_HERE</string>
+    <string name="app_name">DetectorViewDemo</string>
+    <string name="flash_on">Flash on</string>
+    <string name="flash_off">Flash off</string>
+    <string name="menu_clear">Clear history</string>
+    <string name="sdw_unavailable">Secure Digital Watermarks reading is not available</string>
+    <string name="sdw_error">Error occurred during Secure Digital Watermarks reading initialization</string>
+    <string name="sdw_available">Secure Digital Watermarks reading is available</string>
+    <string name="license_key">LICENSE_KEY_GOES_HERE</string>
+    <string name="illuminate_key">ILLUMINATE_KEY_GOES_HERE</string>
+    <string name="illuminate_account_id">ILLUMINATE_ACCOUNT_ID_GOES_HERE</string>
 </resources>
