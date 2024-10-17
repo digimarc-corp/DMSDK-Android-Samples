@@ -29,15 +29,21 @@ import com.digimarc.dms.payload.Payload
 import com.digimarc.dms.readers.BaseReader
 import com.digimarc.dms.readers.ImageFrameStorage
 import com.digimarc.dms.readers.ReaderResult
+import com.digimarc.dms.readers.SecureWatermarkReadinessObserver
 import com.digimarc.dms.resolver.ResolvedContent
+import com.digimarc.dms.session.IlluminateSessionParams
+import com.digimarc.dms.session.SdkSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Arrays
 
 class DetectorViewFragment : Fragment() {
     companion object {
+        private const val useRenderScript =
+            true  // Toggle RenderScript usage for converting image data to bitmaps
         private const val BUNDLE_ITEMS = "ITEMS"
     }
 
@@ -76,7 +82,11 @@ class DetectorViewFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.camera_fragment, container, false)
     }
 
@@ -88,20 +98,25 @@ class DetectorViewFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recycler_view)
 
         mediaPlayer = MediaPlayer()
-        val rawFileDescriptor: AssetFileDescriptor? = context?.resources?.openRawResourceFd(R.raw.ding)
+        val rawFileDescriptor: AssetFileDescriptor? =
+            context?.resources?.openRawResourceFd(R.raw.ding)
         rawFileDescriptor?.let {
-            mediaPlayer?.setDataSource(rawFileDescriptor.fileDescriptor, rawFileDescriptor.startOffset, rawFileDescriptor.length)
+            mediaPlayer?.setDataSource(
+                rawFileDescriptor.fileDescriptor,
+                rawFileDescriptor.startOffset,
+                rawFileDescriptor.length
+            )
             mediaPlayer?.prepareAsync()
             rawFileDescriptor.close()
         }
 
-        detectorViewItemAdapter = DetectorViewItemAdapter(scope, DetectorViewItemClickListener { url ->
-            launchContent(url)
-        })
+        detectorViewItemAdapter =
+            DetectorViewItemAdapter(scope, DetectorViewItemClickListener { url ->
+                launchContent(url)
+            })
         recyclerView.adapter = detectorViewItemAdapter
         val decorator = DividerItemDecoration(recyclerView.context, RecyclerView.VERTICAL)
         recyclerView.addItemDecoration(decorator)
-
 
         initDis()
     }
@@ -124,7 +139,10 @@ class DetectorViewFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelableArrayList(BUNDLE_ITEMS, detectorViewItemAdapter?.items as ArrayList<DetectorViewItem>)
+        outState.putParcelableArrayList(
+            BUNDLE_ITEMS,
+            detectorViewItemAdapter?.items as ArrayList<DetectorViewItem>
+        )
 
         super.onSaveInstanceState(outState)
     }
@@ -133,7 +151,8 @@ class DetectorViewFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         savedInstanceState?.let { bundle ->
-            val restoredItems = bundle.getParcelableArrayList<DetectorViewItem>(BUNDLE_ITEMS) as MutableList<DetectorViewItem>
+            val restoredItems =
+                bundle.getParcelableArrayList<DetectorViewItem>(BUNDLE_ITEMS) as MutableList<DetectorViewItem>
 
             detectorViewItemAdapter?.apply {
                 items = restoredItems
@@ -160,7 +179,11 @@ class DetectorViewFragment : Fragment() {
     }
 
     private fun initDis() {
-        if (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                requireActivity(),
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
 
             // There are several ways of specifying the symbologies you want to use, the easiest one being
             // (assuming that you want to use all detectors) the predefined bitmask values found in DMSDetectorView.
@@ -169,18 +192,19 @@ class DetectorViewFragment : Fragment() {
             // will prevent the DMSDetectorView component from capturing and processing audio. Likewise with
             // image symbologies and camera image capture.
             val symbologies = BaseReader.buildSymbologyMask(
-                    BaseReader.ImageSymbology.Image_Digimarc, // Image Symbologies
-                    BaseReader.ImageSymbology.Image_1D_UPCA,
-                    BaseReader.ImageSymbology.Image_1D_UPCE,
-                    BaseReader.ImageSymbology.Image_1D_EAN13,
-                    BaseReader.ImageSymbology.Image_1D_EAN8,
-                    BaseReader.ImageSymbology.Image_1D_Code39,
-                    BaseReader.ImageSymbology.Image_1D_Code128,
-                    BaseReader.ImageSymbology.Image_1D_DataBar,
-                    BaseReader.ImageSymbology.Image_QRCode,
-                    BaseReader.ImageSymbology.Image_1D_ITF_GTIN_14,
-                    BaseReader.ImageSymbology.Image_1D_ITF_Variable,
-                    BaseReader.AudioSymbology.Audio_Digimarc)         // Audio Symbologies
+                BaseReader.ImageSymbology.Image_Digimarc, // Image Symbologies
+                BaseReader.ImageSymbology.Image_1D_UPCA,
+                BaseReader.ImageSymbology.Image_1D_UPCE,
+                BaseReader.ImageSymbology.Image_1D_EAN13,
+                BaseReader.ImageSymbology.Image_1D_EAN8,
+                BaseReader.ImageSymbology.Image_1D_Code39,
+                BaseReader.ImageSymbology.Image_1D_Code128,
+                BaseReader.ImageSymbology.Image_1D_DataBar,
+                BaseReader.ImageSymbology.Image_QRCode,
+                BaseReader.ImageSymbology.Image_1D_ITF_GTIN_14,
+                BaseReader.ImageSymbology.Image_1D_ITF_Variable,
+                BaseReader.AudioSymbology.Audio_Digimarc
+            )         // Audio Symbologies
 
             dmsDetectorView?.initialize(
                 symbologies,
@@ -193,8 +217,27 @@ class DetectorViewFragment : Fragment() {
                             result.imageFrame?.let { img ->
                                 newPayloads.forEach { payload ->
                                     frameStorage.storeFrame(payload.payloadString, img)
+
+                                    val metadata = result.getMetadata(payload)
+                                    Log.d("Metadata", "Payload metadata content->>")
+                                    metadata?.forEach { dataDictionary ->
+                                        dataDictionary.keys.forEach { runnerKey ->
+                                            Log.d(
+                                                "Metadata",
+                                                "$runnerKey: ${
+                                                    dataDictionary.getValue(
+                                                        runnerKey
+                                                    )
+                                                }"
+                                            )
+                                        }
+
+                                    }
+                                    Log.d("Metadata", "<<- Payload metadata end")
+
                                 }
                             }
+
                             // Resolve new payloads
                             newPayloads
                         }
@@ -213,12 +256,30 @@ class DetectorViewFragment : Fragment() {
                         }
                     }
 
+                },
+                { _, description ->
+                    description?.let {
+                        showErrorDialog(it)
+                    }
+                },
+                IlluminateSessionParams
+                    .withAccountId(getString(R.string.illuminate_account_id))
+                    .withFields(listOf("redirectUrl"))
+                    .withContext(IlluminateSessionParams.IlluminateContext.Production),
+                object : SecureWatermarkReadinessObserver {
+                    override fun onUnavailable() {
+//                        showMessage(getString(R.string.sdw_unavailable))
+                    }
+
+                    override fun onFailure(error: SecureWatermarkReadinessObserver.Errors) {
+                        showMessage(getString(R.string.sdw_error))
+                    }
+
+                    override fun onReady() {
+//                        showMessage(getString(R.string.sdw_available))
+                    }
                 }
-            ) { _, description ->
-                description?.let {
-                    showErrorDialog(it)
-                }
-            }
+            )
 
             // By default tapping on the camera view will cause an immediate focus operation
             // to be performed.  Change this to false to disable.
@@ -236,11 +297,12 @@ class DetectorViewFragment : Fragment() {
             // Configure code location display. The display colors and style can be changed
             // using the parameters below.
             dmsDetectorView?.setImageDetectionLocationStyle(
-                    DMSDetectorView.ImageDetectionLocationStyle.Builder()
-                            .setBorderColor(Color.RED)
-                            .setBorderWidth(1f)
-                            .setFillColor(0x70FFFFFF)
-                            .build())
+                DMSDetectorView.ImageDetectionLocationStyle.Builder()
+                    .setBorderColor(Color.RED)
+                    .setBorderWidth(1f)
+                    .setFillColor(0x70FFFFFF)
+                    .build()
+            )
 
             // Uncomment to constrain detection to a specific region of the camera frame.
 //            enableImageDetectionRegion()
@@ -264,7 +326,7 @@ class DetectorViewFragment : Fragment() {
 
     suspend fun createEntry(result: ResolvedContent) = withContext(Dispatchers.Default) {
         val bmp = frameStorage.removeFrame(result.payload.payloadString)?.let { frame ->
-                BitmapUtils.convertRawImageToBitmap(frame)
+            BitmapUtils.convertRawImageToBitmap(frame, bitmapRotation)
         }
 
         val scaledBmp = bmp?.let {
