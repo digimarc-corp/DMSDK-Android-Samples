@@ -21,4 +21,23 @@ You'll need a valid evaluation or commercial license key to use the core feature
 
 1. Open the project with Android Studio
 1. Replace the license placeholder in src/main/res/values/strings.xml file with your license key. 
-1. Run the app on a connected device using Android Studio or, alternatively, invoke gradle directly using ```./gradlew installDebug```.
+1. Run the app on a connected device using Android Studio or, alternatively, invoke Gradle directly using ```./gradlew installDebug```.
+
+## Illuminate
+
+DMSDemo now works with the [Digimarc Illuminate Platform](https://www.digimarc.com/product-digitization). You'll need a Mobile SDK license key created in Illuminate and a Mobile API key. For instructions on generating these two keys, see [Introducing the Digimarc Mobile SDK](https://landing.digimarc.com).
+
+You can retrieve Illuminate metadata by checking for a payload version that requires a certificate and then querying the metadata - 
+
+```kotlin
+	List<DataDictionary> metadata = readerResult.getMetadata(payload);
+	if (payload.getPayloadVersion().equals("v11"))
+  	{
+  		String url = metadata.get(0).getValue("redirectUrl").toString();
+  		...
+   	}
+```
+For information about the metadata parameters you can request, see the 
+[Illuminate Mobile REST API documentation](https://github.com/digimarc-corp/illuminate-mobile-rest-api). 
+For the code to construct the options, see `createSessionParameters()` in 
+[MainActivity.java](https://github.com/digimarc-corp/DMSDK-Android-Samples/blob/main/DMSDemo/src/main/java/com/digimarc/dmsdemo/MainActivity.java#L316).
