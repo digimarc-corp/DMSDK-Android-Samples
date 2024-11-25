@@ -1,5 +1,7 @@
 # DMSDK - Android Sample Apps
 
+These samples build with [DMSDK 4.0.1](https://landing.digimarc.com/mobile-sdk/documentation/android/javadoc/index.html)
+
 ## DMSDemo
 The DMSDemo project showcases the core Digimarc Mobile SDK APIs.
 
